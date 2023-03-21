@@ -1,4 +1,4 @@
-import pygame 
+import pygame
 from support import import_folder
 
 class Player(pygame.sprite.Sprite):
@@ -19,7 +19,6 @@ class Player(pygame.sprite.Sprite):
 
 		# player movement
 		self.direction = pygame.math.Vector2(0,0)
-		self.speed = 8
 		self.gravity = 0.8
 		self.jump_speed = -20
 
@@ -32,10 +31,17 @@ class Player(pygame.sprite.Sprite):
 		self.on_right = False
 		self.hitting = False
 		self.canmove = True
+		self.fire = False
+	
+		#set flag for else statement in status function
+		self.else_flag = True
+  
+		#set time counter for fire ball
+		self.past_time = -100000
 
 	def import_character_assets(self):
 		character_path = '../graphics/character/'
-		self.animations = {'idle':[],'run':[],'jump':[],'fall':[], 'hit':[]}
+		self.animations = {'idle':[],'run':[],'jump':[],'fall':[], 'hit':[], 'firing':[]}
 
 		for animation in self.animations.keys():
 			full_path = character_path + animation
@@ -100,25 +106,45 @@ class Player(pygame.sprite.Sprite):
 			self.facing_right = False
 		else:
 			self.direction.x = 0
-
+		
 		if keys[pygame.K_SPACE] and self.on_ground:
 			self.jump()
 			self.create_jump_particles(self.rect.midbottom)
-   
+
 		if keys[pygame.K_x] and self.on_ground:
 			self.hitting = True
 		else: self.hitting = False
+		
+		current_time = pygame.time.get_ticks()
+		
+		if keys[pygame.K_z] and self.on_ground:
+			if current_time - self.past_time >= 2000:
+				self.fire = True
+				self.past_time = current_time
+			
 
 	def get_status(self):
-		self.canmove = True
-		if self.hitting == True:
+		current_time = pygame.time.get_ticks()
+  
+		#when we hit firing status, we have to wait for 0.5 second to perform firing pose
+		#this if statement only work if we lock else_flag, then we have to wait for 0.5 second to unlock the last else statement
+		if current_time - self.past_time > 500:
+			self.else_flag = True
+			self.canmove = True
+  
+		if self.fire == True:
+			self.status = 'firing'
+			self.canmove = False
+			self.else_flag = False
+		elif self.hitting == True:
 			self.status = 'hit'
 			self.canmove = False
 		elif self.direction.y < 0:
 			self.status = 'jump'
 		elif self.direction.y > 1:
 			self.status = 'fall'
-		else:
+		elif self.else_flag == True:
+			self.canmove = True
 			if self.direction.x != 0:
 				self.status = 'run'
 			else:
@@ -136,4 +162,5 @@ class Player(pygame.sprite.Sprite):
 		self.get_status()
 		self.animate()
 		self.run_dust_animation()
+		
 		

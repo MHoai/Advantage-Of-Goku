@@ -5,6 +5,7 @@ from tile import Tile, StaticTile, AnimatedTile, Coin
 from enemy import Enemy
 from player import Player
 from particles import ParticleEffect
+from bullet import Bullet
 
 class Level:
     def __init__(self, level_data, surface):
@@ -16,6 +17,7 @@ class Level:
         player_layout = import_csv_layout(level_data['players'])
         self.player = pygame.sprite.GroupSingle()
         self.goal = pygame.sprite.GroupSingle()
+        self.ball = pygame.sprite.Group()
         self.player_setup(player_layout)
         
         self.dust_sprite = pygame.sprite.GroupSingle()
@@ -165,6 +167,17 @@ class Level:
                 offset = pygame.math.Vector2(-10,15)
             fall_dust_particle = ParticleEffect(self.player.sprite.rect.midbottom - offset,'land')
             self.dust_sprite.add(fall_dust_particle)
+            
+    def check_fire(self):
+        if self.player.sprite.fire == True:
+            ball_image = pygame.image.load('../graphics/character/fire/ball.png').convert_alpha()
+            print(self.player.sprite.facing_right)
+            if self.player.sprite.facing_right == True:
+                ball_sprite = Bullet(self.player.sprite.rect.midright, ball_image, 10)
+            else: ball_sprite = Bullet(self.player.sprite.rect.midleft, ball_image, -10)
+            self.ball.add(ball_sprite)
+            self.player.sprite.fire = False
+            
 
     def run(self):
         self.terrain_sprites.draw(self.display_surface)
@@ -193,9 +206,17 @@ class Level:
         self.get_player_on_ground()
         self.create_landing_dust()
         
+        self.check_fire()
+
+
+        self.ball.update()
+        self.ball.draw(self.display_surface)
+        
         self.player.draw(self.display_surface)
         self.goal.update(self.world_shift)
         self.goal.draw(self.display_surface)
+        
+        
         
 
 
