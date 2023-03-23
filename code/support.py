@@ -12,7 +12,7 @@ def import_folder(path):
             full_path = path + '/' + image
             image_surf = pygame.image.load(full_path).convert_alpha()
             if full_path.find('character') != -1 and full_path.find('dust_particles') == -1:
-                image_surf = pygame.transform.scale(image_surf, (100,100))
+               image_surf = pygame.transform.scale(image_surf, (100,100))
                 
             surface_list.append(image_surf)
     
@@ -30,7 +30,6 @@ def import_cut_graphic(path):
     surface = pygame.image.load(path).convert_alpha()
     tile_numx_x = int(surface.get_size()[0] / tile_size)
     tile_numx_y = int(surface.get_size()[1] / tile_size)
-    
     cut_tiles = []
     for row in range(tile_numx_y):
         for col in range(tile_numx_x):
