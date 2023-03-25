@@ -8,7 +8,7 @@ class Bullet(pygame.sprite.Sprite):
         self.pos = pos
         self.isAvaiable = True
         self.shift = shift
-        print(self.shift)
+      #  print(self.shift)
         
         self.image = surface
         self.rect = self.image.get_rect(center = pos)
@@ -19,5 +19,5 @@ class Bullet(pygame.sprite.Sprite):
         if self.shift < 0:
             self.image = pygame.transform.flip(self.image, True, False)
         
-    def update(self):
+    def update(self, player):
         self.rect.x += self.shift
