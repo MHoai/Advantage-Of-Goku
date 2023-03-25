@@ -8,7 +8,7 @@ class Bullet(pygame.sprite.Sprite):
         self.pos = pos
         self.isAvaiable = True
         self.shift = shift
-        print(self.shift)
+      #  print(self.shift)
         
         self.image = surface
         self.rect = self.image.get_rect(center = pos)

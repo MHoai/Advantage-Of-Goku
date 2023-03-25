@@ -1,17 +1,17 @@
 import pygame
 from support import import_csv_layout, import_cut_graphic
-from settings import tile_size, screen_width, screen_height
+from settings import *
 from tile import Tile, StaticTile, AnimatedTile, Coin
 from enemy import Enemy
 from player import Player
 from particles import ParticleEffect
 from bullet import Bullet
+from box import *#######################
 
 class Level:
     def __init__(self, level_data, surface):
         self.display_surface = surface
-        self.world_shift_x = 0
-        self.world_shift_y = 0
+        self.world_shift = 0
         self.current_x = None
         
         #player
@@ -29,33 +29,24 @@ class Level:
         terrain_layout = import_csv_layout(level_data['terrain'])
         self.terrain_sprites = self.create_tile_group(terrain_layout, 'terrain')
         
-        # grass setup 
-        #grass_layout = import_csv_layout(level_data['grass'])
-        #self.grass_sprites = self.create_tile_group(grass_layout,'grass')
-
-		# crates 
-        #crate_layout = import_csv_layout(level_data['crates'])
-        #self.crate_sprites = self.create_tile_group(crate_layout,'crates')
-
-		# coins 
-        #coin_layout = import_csv_layout(level_data['coins'])
-        #self.coin_sprites = self.create_tile_group(coin_layout,'coins')
-
-		# foreground palms 
-        #fg_palm_layout = import_csv_layout(level_data['fg palms'])
-        #self.fg_palm_sprites = self.create_tile_group(fg_palm_layout,'fg palms')
-
-		# background palms 
-        #bg_palm_layout = import_csv_layout(level_data['bg palms'])
-        #self.bg_palm_sprites = self.create_tile_group(bg_palm_layout,'bg palms')
-
-		# enemy 
-        #enemy_layout = import_csv_layout(level_data['enemies'])
-        #self.enemy_sprites = self.create_tile_group(enemy_layout,'enemies')
-
-		# constraint 
-        #constraint_layout = import_csv_layout(level_data['constraints'])
-        #self.constraint_sprites = self.create_tile_group(constraint_layout,'constraint')
+        # coins
+        coin_layout = import_csv_layout(level_data['coins'])
+        self.coin_sprites = self.create_tile_group(coin_layout, 'coins')
+        
+        #enemies
+        enemy_layout = import_csv_layout(level_data['enemies'])
+        self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')    
+        #constraint    
+        constraint_layout = import_csv_layout(level_data['constraints'])
+        self.constraint_sprites = self.create_tile_group(constraint_layout, 'constraints')   
+        
+        #box 
+        box_layout = import_csv_layout(level_data['boxs'])
+        self.box_sprites = self.create_tile_group(box_layout, 'boxs') 
+        
+        #barrier
+#       barrier_layout = import_csv_layout(level_data['barriers'])
+#       self.barrier_sprites = self.create_tile_group(barrier_layout, 'barriers') 
 
     
     def create_tile_group(self, layout, type):
@@ -64,14 +55,30 @@ class Level:
         for row_index, row in enumerate(layout):
             for col_index, val in enumerate(row):
                 if val != '-1':
-                    print("loading: ", val)
                     x = col_index * tile_size
                     y = row_index * tile_size
                     
                     if type == 'terrain':
-                        terrain_tile_list = import_cut_graphic('../graphics/terrain/Assets.png')
+                        terrain_tile_list = import_cut_graphic('../graphics/terrain/terrain_tiles.png')
                         tile_surface = terrain_tile_list[int(val)]
-                        sprite = StaticTile(tile_size, x, y, tile_surface)                
+                        sprite = StaticTile(tile_size, x, y, tile_surface)
+                        
+                    if type == 'coins':
+                        if val == '0': sprite = Coin(tile_size,x,y,'../graphics/coins/gold')
+                        if val == '1': sprite = Coin(tile_size,x,y,'../graphics/coins/silver')
+                        
+                    if type == 'enemies':
+                        sprite = Enemy(tile_size, x, y)
+                    
+                    if type == 'boxs':
+                        sprite = Box_Animated(tile_size, x, y)
+                        
+                    if type == 'constraints':
+                        sprite = Tile(tile_size, x, y)  
+                    
+ #                   if type == 'barriers':
+ #                       tile_surface = import_cut_graphic('../??/barrier.png')
+ #                       sprite = StaticTile(tile_size, x, y, tile_surface)                  
                     
                     sprite_group.add(sprite)    
                         
@@ -103,13 +110,51 @@ class Level:
             pos += pygame.math.Vector2(10,-5)
         jump_particle_sprite = ParticleEffect(pos,'jump')
         self.dust_sprite.add(jump_particle_sprite)
-
+#    def barrier_collision(self):
+#         player = self.player.sprite################################################
+#         collidable_sprites = self.barrier_sprites.sprites()############################################### 
+#         if(player.killed_boss):
+#             for sprite in collidable_sprites: #################################
+#                if sprite.rect.colliderect(player):#############################  
+#                    collidable_sprites.kill()
+#                    return True
+#
+#   def checkEndgame():##############################
+#        if barrier_collision():  endGame()  #############################          
+        
+    def box_collision(self):#########################################
+         player = self.player.sprite################################################
+         collidable_sprites = self.box_sprites.sprites()###############################################
+         for sprite in collidable_sprites: #################################
+             if sprite.rect.colliderect(player):#############################
+                     player.canmove = False
+                     sprite.be_hited = True###################################
+                     if sprite.pass_time == 0 :## chi cap nhat gift cho lan dau tien#######################################################
+                         sprite.pass_time = pygame.time.get_ticks() #######################
+                         if(sprite.gift == 1) : ########################################
+                            if player.healthBar.health + addHp <= 100 :############################
+                                player.healthBar.health += addHp####################
+                            else: player.healthBar.health = 100###########################
+                            print('hp')
+                         elif(sprite.gift == 2) : ####################################33
+                            if player.manaBar.mana + addMana <= 100 :#########################
+                                player.manaBar.mana += addMana################################################
+                            else: player.manaBar.mana = 100#################################   
+                            print('mana')              
+                     if sprite.pass_time :#########################################################
+                         if pygame.time.get_ticks()-sprite.pass_time>=1000 :###############################
+                            sprite.kill()############################################     
+                            player.canmove = True     
     def horizontal_movement_collision(self):
         player = self.player.sprite
         player.rect.x += player.direction.x * player.speed
         collidable_sprites = self.terrain_sprites.sprites() #+ self.crate_sprites.sprites()
-
+        collidable_enemy = self.enemy_sprites.sprites() #########################################
+        
         for sprite in collidable_sprites: 
+            for ball in self.ball:####################################
+                if sprite.rect.colliderect(ball):##################
+                    ball.kill()###############################
             if sprite.rect.colliderect(player.rect):
                 if player.direction.x < 0: 
                     player.rect.left = sprite.rect.right
@@ -119,7 +164,44 @@ class Level:
                     player.rect.right = sprite.rect.left
                     player.on_right = True
                     self.current_x = player.rect.right
-        
+        for sprite in collidable_enemy: ##########################################
+            for ball in self.ball:####################################
+                if sprite.rect.colliderect(ball):##################
+                    sprite.healthBar.health += DAMAGE_POWER #################################
+                    ball.kill()###############################
+            if sprite.rect.colliderect(player.rect):#########################3
+                if player.direction.x < 0: ###############################
+                    player.rect.left = sprite.rect.right#################################3
+                    player.on_left = True#################################33
+                    self.current_x = player.rect.left#############################
+                    if(sprite.can_reverse):########################
+                        if(sprite.speed >0): ###########################
+                            sprite.reverse()#############################
+                            sprite.can_reverse = False##################
+                elif player.direction.x > 0:##################################
+                    player.rect.right = sprite.rect.left########################3
+                    player.on_right = True####################################
+                    self.current_x = player.rect.right###############################
+                    if(sprite.can_reverse):###########################
+                        if(sprite.speed <0): #####################################
+                            sprite.reverse()###############
+                            sprite.can_reverse = False#################
+                else: ##############################################
+                    if(sprite.can_reverse):###########################
+                        sprite.reverse()##################
+                if(player.status=='hit'):#####################
+                    if(sprite.be_hited):####################
+                        sprite.healthBar.health +=DAMAGE_HIT####################
+                        if(player.mana+hit_to_add_mana<=100): player.mana += hit_to_add_mana
+                        sprite.be_hited = False#############################
+                else:##########################
+                    if(player.be_bited):####################
+                        player.healthBar.health +=DAMAGE_BITE #########################################
+                        player.be_bited = False####################
+            else: ################################
+                player.be_bited = True ##########################
+                sprite.be_hited = True ###########################
+                sprite.can_reverse = True ######################################
         if player.on_left and (player.rect.left < self.current_x or player.direction.x >= 0):
             player.on_left = False
         if player.on_right and (player.rect.right > self.current_x or player.direction.x <= 0):
@@ -129,9 +211,11 @@ class Level:
         player = self.player.sprite
         player.apply_gravity()
         collidable_sprites = self.terrain_sprites.sprites() #+ self.crate_sprites.sprites()
+        collidable_enemy = self.enemy_sprites.sprites()###################################
 
         for sprite in collidable_sprites:
             if sprite.rect.colliderect(player.rect):
+                player.on_enemy = False
                 if player.direction.y > 0: 
                     player.rect.bottom = sprite.rect.top
                     player.direction.y = 0
@@ -140,6 +224,15 @@ class Level:
                     player.rect.top = sprite.rect.bottom
                     player.direction.y = 0
                     player.on_ceiling = True
+        for sprite in collidable_enemy:###########################################################
+            if sprite.rect.colliderect(player.rect):########################
+                if player.direction.y > 1: ################################################
+                   player.rect.bottom = sprite.rect.top###############################
+                   player.direction.y = 0######################################################
+                   player.on_ground = False###############################################3
+                   if(player.on_enemy == False): ###################
+                       sprite.healthBar.health += DAMAGE_GRAVITY#########################  
+                       player.on_enemy = True ##############################
 
         if player.on_ground and player.direction.y < 0 or player.direction.y > 1:
             player.on_ground = False
@@ -151,36 +244,20 @@ class Level:
         player_x = player.rect.centerx
         direction_x = player.direction.x
 
-        if player_x < screen_width / 3 and direction_x < 0:
-            self.world_shift_x = 8
+        if player_x < screen_width / 4 and direction_x < 0:
+            self.world_shift = 8
             player.speed = 0
-        elif player_x > screen_width - (screen_width / 3) and direction_x > 0:
-            self.world_shift_x = -8
+        elif player_x > screen_width - (screen_width / 4) and direction_x > 0:
+            self.world_shift = -8
             player.speed = 0
         else:
-            self.world_shift_x = 0
+            self.world_shift = 0
             player.speed = 8
-            
-    def scroll_y(self):
-        player = self.player.sprite
-        player_y = player.rect.centery
-        direction_y = player.direction.y
-        
-        keys = pygame.key.get_pressed()
-        if not (player.status == 'fall' and (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT])):
-            if player_y < screen_height / 4 and player.status == 'idle':
-                self.world_shift_y = 10
-            elif player_y > screen_height - (screen_height / 4) and player.status == 'idle':
-                self.world_shift_y = -10
-            else: 
-                self.world_shift_y = 0
-        else:
-            self.world_shift_y = 0
-            
 
     def get_player_on_ground(self):
         if self.player.sprite.on_ground:
             self.player_on_ground = True
+            self.player.sprite.on_enemy = False#######################################################
         else:
             self.player_on_ground = False
 
@@ -194,64 +271,70 @@ class Level:
             self.dust_sprite.add(fall_dust_particle)
             
     def check_fire(self):
-        if self.player.sprite.fire == True:
-            ball_image = pygame.image.load('../graphics/character/fire/ball.png').convert_alpha()
-            if self.player.sprite.facing_right == True:
-                ball_sprite = Bullet(self.player.sprite.rect.midright, ball_image, 10)
-            else: ball_sprite = Bullet(self.player.sprite.rect.midleft, ball_image, -10)
-            self.ball.add(ball_sprite)
+        if self.player.sprite.manaBar.mana + mana_to_power < 0 :
             self.player.sprite.fire = False
-            
-    def ball_collide_terrain(self):        
-        pygame.sprite.groupcollide(self.ball, self.terrain_sprites, True, False)
+        else:
+            if self.player.sprite.fire == True:
+                ball_image = pygame.image.load('../graphics/character/fire/ball.png').convert_alpha()
+                #print(self.player.sprite.facing_right)
+                if self.player.sprite.facing_right == True:
+                    ball_sprite = Bullet(self.player.sprite.rect.midright, ball_image, 10)
+                else: ball_sprite = Bullet(self.player.sprite.rect.midleft, ball_image, -10)
+                self.ball.add(ball_sprite)
+                self.player.sprite.manaBar.mana += mana_to_power 
+                self.player.sprite.fire = False
             
 
     def run(self):
         self.terrain_sprites.draw(self.display_surface)
-        self.terrain_sprites.update(self.world_shift_x, self.world_shift_y)
+        self.terrain_sprites.update(self.world_shift)
+        
+#       self.checkEndgame()########################################      
+#       self.barrier_sprites.draw(self.display_surface)###################################
+#       self.barrier_sprites.update(self.world_shift)#############################
         
         #coins
-        # self.coin_sprites.update(self.world_shift)
-        # self.coin_sprites.draw(self.display_surface)
+        self.coin_sprites.update(self.world_shift)
+        self.coin_sprites.draw(self.display_surface)
         
         #enemy
-        # self.enemy_sprites.update(self.world_shift)
-        # self.constraint_sprites.update(self.world_shift)
-        # self.enemy_collision_reserse()
-        # self.enemy_sprites.draw(self.display_surface)
+        self.enemy_sprites.update(self.world_shift)###############################################
+        self.constraint_sprites.update(self.world_shift)
+        self.enemy_collision_reserse()
+        self.enemy_sprites.draw(self.display_surface)
         
-        #ball
-        self.ball_collide_terrain()
+        self.box_collision()########################################
+        self.box_sprites.update(self.world_shift)#######################################
+        self.box_sprites.draw(self.display_surface)###################################
         
-        # # dust particles
-        # self.dust_sprite.update(self.world_shift)
-        # self.dust_sprite.draw(self.display_surface)
+        # dust particles
+        self.dust_sprite.update(self.world_shift)
+        self.dust_sprite.draw(self.display_surface)
         
         #player sprites
         self.player.update()
         
         self.scroll_x()
-        self.scroll_y()
         self.horizontal_movement_collision()
         self.vertical_movement_collision()
         self.get_player_on_ground()
         self.create_landing_dust()
         
         self.check_fire()
-
-
+        
         self.ball.update()
         self.ball.draw(self.display_surface)
         
         self.player.draw(self.display_surface)
-        self.goal.update(self.world_shift_x, self.world_shift_y)
+        self.goal.update(self.world_shift)
         self.goal.draw(self.display_surface)
-        
-        
-        
-
-
-
-
-        
     
+        
+        #health&mana bar
+        self.player.sprite.healthBar.draw(self.display_surface,self.player.sprite.rect,'player')################################################
+        self.player.sprite.manaBar.draw(self.display_surface,self.player.sprite.rect)################################################
+        for enemy in self.enemy_sprites :##################################################
+            enemy.healthBar.draw(self.display_surface,enemy.rect,'enemy')
+            
+           
+      

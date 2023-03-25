@@ -1,6 +1,19 @@
-vertical_tile_number = 12
-horizonal_tile_number = 20
-tile_size = 50
-
+vertical_tile_number = 11
+tile_size = 64
+yellow = (255, 215, 0) #########################################
+widthHealthBar_player = 90#############################################
+widthHealthBar_enemy = 50#############################################
+heightHealthBar = 10#####################################################
+hpEnemy = 10 ##################################################
+hpPlayer = 100 ##########################
+mana = 100##########################
 screen_height = vertical_tile_number*tile_size
-screen_width = horizonal_tile_number*tile_size
+screen_width = 1200
+DAMAGE_GRAVITY = -5##########################################
+DAMAGE_BITE = - 10 ####################################
+DAMAGE_HIT = -5#######################
+DAMAGE_POWER = - 20#############################################
+mana_to_power = -25################################
+addHp = 10 ##########################
+addMana = 20########################################
+hit_to_add_mana = 5################################
