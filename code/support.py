@@ -11,8 +11,9 @@ def import_folder(path):
         for image in image_files:
             full_path = path + '/' + image
             image_surf = pygame.image.load(full_path).convert_alpha()
-            if full_path.find('character') != -1 and full_path.find('dust_particles') == -1:
-                image_surf = pygame.transform.scale(image_surf, (100,100))
+            if full_path.find("demon") != -1:
+                image_surf = pygame.transform.scale(image_surf, (image_surf.get_rect().width*3, image_surf.get_rect().height*3))
+                
                 
             surface_list.append(image_surf)
     

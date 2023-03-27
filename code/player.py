@@ -1,22 +1,27 @@
-import pygame
+import pygame,time
 from support import import_folder
 from  HealthBar import * 
 from settings import *
 from  manaBar import * 
+from end import*
 
 class Player(pygame.sprite.Sprite):
 	def __init__(self,pos,surface,create_jump_particles):
 		super().__init__()
+		self.ssj = False
 		self.import_character_assets()
 		self.frame_index = 0
 		self.animation_speed = 0.15
 		self.image = self.animations['idle'][self.frame_index]
-		self.rect = self.image.get_rect(topleft = pos)
-		self.hp = hpPlayer######################################################	
+		self.rect = self.image.get_rect(topleft = pos)	
 		self.mana = mana##########################################
-		self.healthBar =  HealthBar(  widthHealthBar_player, heightHealthBar, self.hp)###########################
+		self.healthBar =  HealthBar(  widthHealthBar_player, heightHealthBar, hpPlayer)###########################
 		self.manaBar =  manaBar(  widthHealthBar_player, heightHealthBar, self.mana)###########################
 		self.killed_boss = False#########################################
+		self.time_end = 0############################3
+		self.collect_coin = True#####################
+		#self.be_cleave = True###########################
+		#self.time_to_be_cleave = 0#######################
 		# dust particles 
 		self.import_dust_run_particles()
 		self.dust_frame_index = 0
@@ -42,6 +47,8 @@ class Player(pygame.sprite.Sprite):
 		self.canmove = True
 		self.fire = False
 		self.sit = False
+		self.focus = False
+		self.kame_sound = pygame.mixer.Sound("../music/kamehameha.wav")
 	
 		#set flag for else statement in status function
 		self.else_flag = True
@@ -50,8 +57,11 @@ class Player(pygame.sprite.Sprite):
 		self.past_time = -100000
 
 	def import_character_assets(self):
-		character_path = '../graphics/character/'
-		self.animations = {'idle':[],'run':[],'jump':[],'fall':[], 'hit':[], 'firing':[], 'sit':[],'be_bited_left':[], 'be_bited_right':[] }###########################
+		if self.ssj == False:
+			character_path = '../graphics/character/'
+		else:
+			character_path = '../graphics/ssj/'
+		self.animations = {'idle':[],'run':[],'jump':[],'fall':[], 'hit':[], 'firing':[], 'sit':[],'be_bited_left':[], 'be_bited_right':[], 'focus':[],'die':[], 'win': []}###########################
 
 		for animation in self.animations.keys():
 			full_path = character_path + animation
@@ -117,14 +127,13 @@ class Player(pygame.sprite.Sprite):
 		else:
 			self.direction.x = 0
 		
-		if keys[pygame.K_UP] and self.on_ground:
+		if keys[pygame.K_SPACE] and self.on_ground:
 			self.jump()
 			self.create_jump_particles(self.rect.midbottom)
         
 		if keys[pygame.K_DOWN] and self.on_ground:#######################################################
 			self.sit = True#######################################################
-		else: self.sit = False#########################################
-    
+		else: self.sit = False
 			
 
 		if keys[pygame.K_x] and self.on_ground:
@@ -137,7 +146,17 @@ class Player(pygame.sprite.Sprite):
 			if current_time - self.past_time >= 2000:
 				self.fire = True
 				self.past_time = current_time
-			
+    
+		if keys[pygame.K_c] and self.on_ground:
+			self.focus = True
+		else: self.focus = False
+		
+		if self.manaBar.mana >= 100:
+			if keys[pygame.K_v] and self.on_ground:
+					self.ssj = True
+					self.import_character_assets()
+ 
+ 
 
 	def get_status(self):
 		current_time = pygame.time.get_ticks()
@@ -147,8 +166,23 @@ class Player(pygame.sprite.Sprite):
 		if current_time - self.past_time > 500:
 			self.else_flag = True
 			self.canmove = True
-  
-		if self.fire == True:
+   
+		#Check ssj status
+		if self.manaBar.mana == 0:
+			self.ssj = False
+			self.import_character_assets()
+        #check the status of player
+		if self.healthBar.health == -9999:########################
+			self.status = 'win'##################################
+			self.canmove = False##########################
+		elif self.healthBar.health <= 0:########################
+			self.status = 'die'##################################
+			self.canmove = False##########################
+		
+		elif self.focus == True:
+			self.status = 'focus'
+			self.canmove = False
+		elif self.fire == True:
 			self.status = 'firing'
 			self.canmove = False
 			self.else_flag = False
@@ -160,12 +194,11 @@ class Player(pygame.sprite.Sprite):
 		elif self.direction.y > 1:
 			self.status = 'fall'
 		elif self.sit == True:#############################
-			self.status = 'sit' ###############################################3 
-		elif self.be_bited == False:########################
-			self.canmove = False######################################
+			self.status = 'sit' ###############################################3
+		elif self.be_bited == False:
 			self.status = 'be_bited_right'################################ 
 			if self.facing_right :#######################################
-				self.status = 'be_bited_left'###############################
+				self.status = 'be_bited_left'############################# 
 		elif self.else_flag == True:
 			self.canmove = True
 			if self.direction.x != 0:
@@ -178,14 +211,26 @@ class Player(pygame.sprite.Sprite):
 		self.rect.y += self.direction.y
 
 	def jump(self):
-		self.direction.y = self.jump_speed
+		self.direction.y = self.jump_speed	
 
 	def update(self):########################################
+		if self.status == 'win' : ################### vi ta cap nhat truc tiep status khong thong qua get_status nen de tranh
+      ## bi chong code nen check truoc luon
+			if self.time_end == 0: self.time_end = pygame.time.get_ticks()###############################
+			else: #####################################################
+				if(pygame.time.get_ticks() - self.time_end>=1000):##############################
+					endGame('win')############################
 		self.get_input()
 		self.get_status()
 		self.animate()
 		self.run_dust_animation()
-		#self.healthBar.update()  ###############################      				
+		if self.status == 'die' : ################### 
+				if self.time_end == 0: self.time_end = pygame.time.get_ticks()###############################
+				else: #####################################################
+					if(pygame.time.get_ticks() - self.time_end>=1000):##############################
+						endGame('lose')############################
+
+		#self.healthBar.update()  ###############################  	
         
 		
 		

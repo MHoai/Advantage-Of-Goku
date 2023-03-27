@@ -19,5 +19,5 @@ class Bullet(pygame.sprite.Sprite):
         if self.shift < 0:
             self.image = pygame.transform.flip(self.image, True, False)
         
-    def update(self):
+    def update(self, player):
         self.rect.x += self.shift
