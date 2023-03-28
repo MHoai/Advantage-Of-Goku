@@ -7,8 +7,9 @@ class Tile(pygame.sprite.Sprite):
         self.image = pygame.Surface((size,size))
         self.rect = self.image.get_rect(topleft = (x,y))
     
-    def update(self, shift):
-        self.rect.x += shift
+    def update(self, shift_x, shift_y):
+        self.rect.x += shift_x
+        self.rect.y += shift_y
         
 class StaticTile(Tile):
     def __init__(self, size, x, y, surface):
@@ -39,6 +40,9 @@ class Coin(AnimatedTile):
         center_y = y + int(size/2)
         self.rect = self.image.get_rect(center = (center_x, center_y))
         
-            
+    def update(self, shift_x, shift_y):
+        self.animate()
+        self.rect.x += shift_x 
+        self.rect.y += shift_y    
 
     

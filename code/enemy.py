@@ -11,8 +11,7 @@ class Enemy(AnimatedTile):
         self.speed = -1*randint(3,5)
         self.healthBar =  HealthBar(  widthHealthBar_enemy, heightHealthBar, hpEnemy)###########################
         self.be_hited = True###########################
-        self.can_reverse = True#####################
-        
+        self.can_reverse = True ######################################
     def move(self):
         self.rect.x += self.speed
         
@@ -23,9 +22,10 @@ class Enemy(AnimatedTile):
     def reverse(self):
         self.speed *= -1
             
-    def update(self, shift):##################################
-        self.rect.x += shift
-        if(self.healthBar.health) <= 0 : self.kill()
+    def update(self, shift_x, shift_y):##################################
+        self.rect.x += shift_x
+        self.rect.y += shift_y
+        if(self.healthBar.health) <= 0 : self.kill()########################################
         self.animate()
         self.move()
         self.reverse_image()

@@ -25,6 +25,13 @@ class HealthBar(pygame.sprite.Sprite):
           health_border_rect.topleft = (character_rect.x - 1, character_rect.y - 30 - 1)
           pygame.draw.rect(screen, yellow, health_rect)
           pygame.draw.rect(screen, (0, 0, 0), health_border_rect,2)
+        elif(type =='boss') :  
+          health_rect = pygame.Rect(0, 0, self.width * (self.health / hpBoss), self.height)
+          health_border_rect = pygame.Rect(0, 0, self.width + 2, self.height+2)
+          health_rect.topleft = (character_rect.x+30, character_rect.y - 30)######################################
+          health_border_rect.topleft = (character_rect.x+30 - 1, character_rect.y - 30 - 1)######################################
+          pygame.draw.rect(screen, yellow, health_rect)############################################
+          pygame.draw.rect(screen, (0, 0, 0), health_border_rect,2)
 
     #def update(self):
     #    self.health += changeHP
